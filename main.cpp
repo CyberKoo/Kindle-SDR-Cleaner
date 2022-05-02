@@ -8,7 +8,7 @@ int main(int argc, char *argv[]) {
         if (argc < 2) {
             // used on jailbroken kindle
             cleaning_path = "/mnt/us/documents";
-            std::cout << "No cleaning given, use default path." << std::endl;
+            std::cout << "Use default documents path." << std::endl;
         } else {
             cleaning_path = argv[1];
         }
