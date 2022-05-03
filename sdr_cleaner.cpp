@@ -16,17 +16,17 @@ struct FILE_TYPE_MASK {
     static constexpr int SDR_FOLDER = 4;
 };
 
-static int removeOrphanedSdr(const std::filesystem::path &, const std::map<std::string, int> &);
+static int removeOrphanedSdr(const std::filesystem::path &, const std::map<std::string, int> &, bool);
 
-static std::map<std::string, int> searchOrphanedSdr(const std::filesystem::path &);
+std::map<std::string, int> searchOrphanedSdr(const std::filesystem::path &);
 
-static std::vector <std::filesystem::path> getAllSubdirectories(std::string_view);
+std::vector<std::filesystem::path> getAllSubdirectories(std::string_view);
 
 static constexpr char SDR_EXTENSION[] = ".sdr";
 
 static constexpr int SDR_ONLY_FLAG = FILE_TYPE_MASK::SDR_FOLDER;
 
-void SdrCleaner::clean(std::string_view root_path) {
+void SdrCleaner::clean(std::string_view root_path, bool print_msg) {
     auto working_dir = std::filesystem::path(root_path);
 
     // handle invalid path
@@ -40,14 +40,14 @@ void SdrCleaner::clean(std::string_view root_path) {
     auto total_removed = 0;
     for (auto &path: directories) {
         auto result = searchOrphanedSdr(path);
-        total_removed += removeOrphanedSdr(path, result);
+        total_removed += removeOrphanedSdr(path, result, print_msg);
     }
 
-    std::cout << "Total removed folders: " << total_removed << std::endl;
+    std::cout << "Deleted " << total_removed << " directories" << std::endl;
 }
 
-std::vector <std::filesystem::path> getAllSubdirectories(std::string_view base_path) {
-    std::vector <std::filesystem::path> subdirectories;
+std::vector<std::filesystem::path> getAllSubdirectories(std::string_view base_path) {
+    std::vector<std::filesystem::path> subdirectories;
 
     // add base path to the vector
     subdirectories.emplace_back(base_path);
@@ -87,7 +87,8 @@ std::map<std::string, int> searchOrphanedSdr(const std::filesystem::path &path) 
     return result;
 }
 
-int removeOrphanedSdr(const std::filesystem::path &base_dir, const std::map<std::string, int> &search_result) {
+int removeOrphanedSdr(const std::filesystem::path &base_dir, const std::map<std::string, int> &search_result,
+                      bool print_message) {
     int deleted = 0;
     for (const auto &[key, value]: search_result) {
         if (value == SDR_ONLY_FLAG) {
@@ -95,14 +96,11 @@ int removeOrphanedSdr(const std::filesystem::path &base_dir, const std::map<std:
             auto target = std::filesystem::path(base_dir) / directory_name;
 
             if (std::filesystem::exists(target)) {
-                std::error_code ec;
-                std::filesystem::remove_all(target, ec);
-
-                if (!ec) {
-                    std::cout << "Deleted: " << directory_name << std::endl;
+                if (std::filesystem::remove_all(target)) {
+                    if (print_message) {
+                        std::cout << "Delete directory: " << directory_name << std::endl;
+                    }
                     ++deleted;
-                } else {
-                    std::cerr << ec.message() << std::endl;
                 }
             }
         }

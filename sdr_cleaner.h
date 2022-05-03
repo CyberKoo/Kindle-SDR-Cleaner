@@ -8,7 +8,7 @@
 #include <string_view>
 
 namespace SdrCleaner {
-    void clean(std::string_view);
+    void clean(std::string_view, bool);
 }
 
 #endif //SDR_CLEANER_SDR_CLEANER_H
